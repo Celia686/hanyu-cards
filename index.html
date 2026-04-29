@@ -1152,7 +1152,7 @@
     <p style="font-size:14px;color:var(--text-mid);margin-bottom:14px" id="submitModalInfo"></p>
     <input type="text" id="submitNameInput" placeholder="请输入你的姓名" maxlength="20">
     <div class="modal-btns">
-      <button class="btn-confirm" onclick="confirmSubmitScore()">确认提交</button>
+      <button class="btn-confirm" onclick="confirmSubmitScore()">复制成绩</button>
       <button class="btn-cancel" onclick="closeSubmitModal()">取消</button>
     </div>
     <div class="submit-status" id="submitStatus"></div>
@@ -1949,10 +1949,6 @@ function confirmSubmitScore() {
   document.getElementById('submitNameInput').style.borderColor = '';
   localStorage.setItem('hz_student_name', name);
 
-  const statusEl = document.getElementById('submitStatus');
-  statusEl.textContent = '提交中...';
-  statusEl.className = 'submit-status';
-
   const type = pendingSubmitType;
   const s = sessionData[type];
   const totalAll = s.totalOk + s.totalErr;
@@ -1960,50 +1956,65 @@ function confirmSubmitScore() {
   const typeLabel = type === 'match' ? '配对练习' : '听写练习';
   const wrongText = s.allWrongWords.map(w => w.hz).join('、') || '无';
 
-  const payload = {
-    name: name,
-    lesson: s.lessonName,
-    type: typeLabel,
-    rounds: s.rounds,
-    total: totalAll,
-    ok: s.totalOk,
-    err: s.totalErr,
-    accuracy: accAll + '%',
-    time: formatTime(s.totalTime),
-    wrongWords: wrongText,
-    submittedAt: new Date().toLocaleString('zh-CN')
-  };
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('zh-CN');
+  const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 
-  // 发送到腾讯文档收集表
-  submitToTencentDoc(payload).then(ok => {
-    if (ok) {
-      statusEl.textContent = '✅ 成绩已提交！';
+  // 生成格式化文本
+  const text = `📚 汉语词卡练习成绩\n` +
+    `━━━━━━━━━━━━━━\n` +
+    `👤 姓名：${name}\n` +
+    `📖 课程：${s.lessonName}\n` +
+    `📝 练习：${typeLabel}\n` +
+    `🔄 轮次：${s.rounds} 轮\n` +
+    `📊 题数：${totalAll} 题\n` +
+    `✅ 正确：${s.totalOk}\n` +
+    `❌ 错误：${s.totalErr}\n` +
+    `📈 正确率：${accAll}%\n` +
+    `⏱️ 用时：${formatTime(s.totalTime)}\n` +
+    `${wrongText !== '无' ? '❗ 错词：' + wrongText + '\n' : ''}` +
+    `━━━━━━━━━━━━━━\n` +
+    `📅 ${dateStr} ${timeStr}`;
+
+  // 复制到剪贴板
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      const statusEl = document.getElementById('submitStatus');
+      statusEl.innerHTML = '✅ 成绩已复制到剪贴板！<br><span style="font-size:12px;color:var(--text-light)">请粘贴发送给老师</span>';
       statusEl.className = 'submit-status ok';
-      setTimeout(() => closeSubmitModal(), 1200);
-    } else {
-      statusEl.textContent = '❌ 提交失败，请稍后重试';
-      statusEl.className = 'submit-status err';
-    }
-  });
+    }).catch(() => {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
 }
 
-async function submitToTencentDoc(data) {
-  // TODO: 替换为实际的腾讯文档收集表提交 URL
-  // 当前先模拟成功
+function fallbackCopy(text) {
+  // 兼容方案
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
   try {
-    console.log('[成绩提交]', data);
-    // 实际提交代码示例（取消注释并替换 URL）：
-    // const resp = await fetch('YOUR_TENCENT_DOC_WEBHOOK_URL', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // });
-    // return resp.ok;
-    return true; // 模拟成功
+    document.execCommand('copy');
+    const statusEl = document.getElementById('submitStatus');
+    statusEl.innerHTML = '✅ 成绩已复制到剪贴板！<br><span style="font-size:12px;color:var(--text-light)">请粘贴发送给老师</span>';
+    statusEl.className = 'submit-status ok';
   } catch (e) {
-    console.error('[成绩提交失败]', e);
-    return false;
+    const statusEl = document.getElementById('submitStatus');
+    statusEl.innerHTML = '❌ 复制失败，请手动复制';
+    statusEl.className = 'submit-status err';
   }
+  document.body.removeChild(ta);
+}
+
+// 腾讯文档在线提交（预留接口，后续配置后启用）
+async function submitToTencentDoc(data) {
+  // 预留：配置腾讯文档智能表格 Webhook 后可启用
+  return true;
 }
 
 // ==================== 词单编辑器 ====================
