@@ -465,6 +465,206 @@
   .rnum.ok-color { color: #27ae60; }
   .rnum.err-color { color: #c0392b; }
   .btn-match-restart {
+    margin-top: 14px;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-match-restart:hover { background: var(--primary-light); }
+
+  /* ===== 听写练习区域 ===== */
+  #dictArea {
+    width: 100%;
+    max-width: 600px;
+    padding: 0 18px;
+    display: none;
+  }
+  .dict-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .dict-toolbar label {
+    font-size: 13px;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+  .dict-timer {
+    margin-left: auto;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 56px;
+    text-align: right;
+  }
+  .dict-score {
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .dict-score .sc-ok { color: #27ae60; }
+  .dict-score .sc-err { color: #c0392b; }
+
+  /* 听写主卡片 */
+  .dict-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 24px;
+    text-align: center;
+    position: relative;
+  }
+  .dict-progress {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .dict-play-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    color: #fff;
+    font-size: 36px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(41,128,185,0.35);
+    transition: transform .15s, box-shadow .15s;
+    margin-bottom: 8px;
+  }
+  .dict-play-btn:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(41,128,185,0.45); }
+  .dict-play-btn:active { transform: scale(0.95); }
+  .dict-play-hint {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+  .dict-input-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+  .dict-input {
+    width: 240px;
+    padding: 12px 16px;
+    border: 2.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 28px;
+    text-align: center;
+    outline: none;
+    transition: border-color .2s;
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  }
+  .dict-input:focus { border-color: var(--accent); }
+  .dict-input.correct { border-color: #27ae60; background: #eafaf1; }
+  .dict-input.wrong { border-color: #c0392b; background: #fdecea; animation: shake .35s ease; }
+  .dict-submit-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .dict-submit-btn:hover { background: var(--primary-light); }
+  .dict-skip-btn {
+    padding: 10px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--text-mid);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: 12px;
+  }
+  .dict-skip-btn:hover { background: #f0f0f0; }
+  .dict-answer-reveal {
+    margin-top: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    min-height: 28px;
+  }
+  .dict-answer-reveal .answer-hz { color: var(--primary); letter-spacing: 3px; }
+  .dict-answer-reveal .answer-py { color: var(--text-light); font-size: 15px; margin-left: 8px; }
+
+  /* 听写完成横幅 */
+  .dict-done {
+    display: none;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 24px;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .dict-done h2 { font-size: 26px; color: var(--primary); }
+  .dict-wrong-list {
+    margin-top: 16px;
+    text-align: left;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .dict-wrong-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 15px;
+  }
+  .dict-wrong-item:last-child { border-bottom: none; }
+  .dict-wrong-item .whz { font-weight: 700; color: var(--primary); font-size: 20px; }
+  .dict-wrong-item .wpy { color: var(--text-light); font-size: 13px; }
+  .dict-wrong-item .wth { color: #7f5af0; font-size: 14px; }
+  .btn-dict-restart {
+    margin-top: 14px;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-dict-restart:hover { background: var(--primary-light); }
+  .btn-dict-retry {
+    margin-top: 8px;
+    padding: 10px 28px;
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-dict-retry:hover { background: var(--primary); color: #fff; }
+  .btn-match-restart {
     border: none;
     border-radius: 50px;
     padding: 13px 40px;
@@ -660,6 +860,7 @@
     <div class="main-mode-toggle">
       <button id="mainFlash" class="on" onclick="switchMainMode('flash')">🃏 闪卡练习</button>
       <button id="mainMatch" onclick="switchMainMode('match')">🔗 配对练习</button>
+      <button id="mainDict" onclick="switchMainMode('dict')">✍️ 听写练习</button>
     </div>
     <!-- 课程选择 -->
     <select id="lessonSelect"></select>
@@ -788,6 +989,63 @@
       </div>
     </div>
     <button class="btn-match-restart" onclick="startMatch()">再来一轮</button>
+  </div>
+</div>
+
+<!-- ===== 听写练习区域 ===== -->
+<div id="dictArea">
+  <!-- 工具栏 -->
+  <div class="dict-toolbar">
+    <label>每轮：</label>
+    <select id="dictSizeSelect" onchange="startDict()">
+      <option value="8">8个</option>
+      <option value="12">12个</option>
+      <option value="0">全部</option>
+    </select>
+    <div class="dict-timer" id="dictTimer">0:00</div>
+    <div class="dict-score">
+      <span class="sc-ok">✓ <span id="dictOk">0</span></span>
+      <span class="sc-err">✗ <span id="dictErr">0</span></span>
+    </div>
+  </div>
+
+  <!-- 听写主卡片 -->
+  <div class="dict-card" id="dictCard">
+    <div class="dict-progress" id="dictProgress">第 1 / 10 个</div>
+    <button class="dict-play-btn" id="dictPlayBtn" onclick="playDictWord()">🔊</button>
+    <div class="dict-play-hint">点击播放发音</div>
+    <div class="dict-input-row">
+      <input type="text" class="dict-input" id="dictInput" placeholder="输入汉字" autocomplete="off" autocapitalize="off">
+      <button class="dict-submit-btn" id="dictSubmitBtn" onclick="submitDictAnswer()">提交</button>
+    </div>
+    <button class="dict-skip-btn" onclick="skipDictWord()">跳过 →</button>
+    <div class="dict-answer-reveal" id="dictAnswerReveal"></div>
+  </div>
+
+  <!-- 听写完成横幅 -->
+  <div class="dict-done" id="dictDone">
+    <h2>🎉 听写完成！</h2>
+    <div class="result-grid">
+      <div class="ritem">
+        <div class="rnum time-color" id="dictResDuration">—</div>
+        <div class="rlabel">用时</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum ok-color" id="dictResOk">—</div>
+        <div class="rlabel">正确</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum err-color" id="dictResErr">—</div>
+        <div class="rlabel">错误</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum" id="dictResAcc" style="color:var(--primary)">—</div>
+        <div class="rlabel">正确率</div>
+      </div>
+    </div>
+    <div class="dict-wrong-list" id="dictWrongList"></div>
+    <button class="btn-dict-restart" onclick="startDict()">再来一轮</button>
+    <button class="btn-dict-retry" id="dictRetryBtn" onclick="retryWrongWords()" style="display:none">错词重练</button>
   </div>
 </div>
 
@@ -931,10 +1189,13 @@ function switchMainMode(m) {
   mainMode = m;
   document.getElementById('mainFlash').classList.toggle('on', m === 'flash');
   document.getElementById('mainMatch').classList.toggle('on', m === 'match');
+  document.getElementById('mainDict').classList.toggle('on', m === 'dict');
   document.getElementById('flashArea').style.display = m === 'flash' ? 'flex' : 'none';
   document.getElementById('matchArea').style.display = m === 'match' ? 'block' : 'none';
+  document.getElementById('dictArea').style.display = m === 'dict' ? 'block' : 'none';
   document.getElementById('flashControls').style.display = m === 'flash' ? 'flex' : 'none';
   if (m === 'match') startMatch();
+  if (m === 'dict') startDict();
 }
 
 // ==================== 状态（闪卡） ====================
@@ -1283,6 +1544,201 @@ function formatTime(s) {
   const sec = s % 60;
   return `${m}:${sec.toString().padStart(2, '0')}`;
 }
+
+// ==================== 听写练习 ====================
+let dictWords = [];       // 本轮听写词列表
+let dictPos = 0;          // 当前第几个
+let dictOkCount = 0;
+let dictErrCount = 0;
+let dictWrongWords = [];  // 错词列表
+let dictStartTime = null;
+let dictTimerInterval = null;
+let dictDone = false;
+let dictLocked = false;   // 锁定输入（显示答案期间）
+let dictRetryMode = false;
+
+function startDict(retryWords) {
+  clearInterval(dictTimerInterval);
+  document.getElementById('dictDone').style.display = 'none';
+  document.getElementById('dictCard').style.display = 'block';
+  document.getElementById('dictTimer').textContent = '0:00';
+  dictOkCount = 0; dictErrCount = 0;
+  dictWrongWords = [];
+  dictLocked = false; dictDone = false;
+  document.getElementById('dictOk').textContent = '0';
+  document.getElementById('dictErr').textContent = '0';
+  document.getElementById('dictAnswerReveal').innerHTML = '';
+
+  const words = currentLesson().words;
+  if (words.length === 0) {
+    document.getElementById('dictCard').innerHTML = '<div style="padding:30px;color:var(--text-light)">本课暂无词汇</div>';
+    return;
+  }
+
+  if (retryWords && retryWords.length > 0) {
+    // 错词重练模式
+    dictRetryMode = true;
+    dictWords = [...retryWords];
+  } else {
+    dictRetryMode = false;
+    const sizeVal = parseInt(document.getElementById('dictSizeSelect').value);
+    let pool = [...words];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    dictWords = sizeVal === 0 ? pool : pool.slice(0, Math.min(sizeVal, pool.length));
+  }
+
+  dictPos = 0;
+  dictStartTime = Date.now();
+  dictTimerInterval = setInterval(updateDictTimer, 500);
+  renderDictQuestion();
+}
+
+function renderDictQuestion() {
+  if (dictPos >= dictWords.length) {
+    finishDict();
+    return;
+  }
+  const w = dictWords[dictPos];
+  document.getElementById('dictProgress').textContent = `第 ${dictPos + 1} / ${dictWords.length} 个`;
+  document.getElementById('dictInput').value = '';
+  document.getElementById('dictInput').className = 'dict-input';
+  document.getElementById('dictInput').disabled = false;
+  document.getElementById('dictSubmitBtn').disabled = false;
+  document.getElementById('dictAnswerReveal').innerHTML = '';
+  dictLocked = false;
+  // 自动播放发音
+  setTimeout(() => playWord(w.hz), 300);
+  // 聚焦输入框
+  setTimeout(() => document.getElementById('dictInput').focus(), 600);
+}
+
+function playDictWord() {
+  if (dictPos < dictWords.length) {
+    playWord(dictWords[dictPos].hz);
+  }
+}
+
+function playWord(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.75;
+  u.pitch = 1;
+  // 尝试选中文语音
+  const voices = window.speechSynthesis.getVoices();
+  const zhVoice = voices.find(v => v.lang.startsWith('zh'));
+  if (zhVoice) u.voice = zhVoice;
+  window.speechSynthesis.speak(u);
+}
+
+// 预加载语音列表
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+}
+
+function submitDictAnswer() {
+  if (dictLocked || dictDone) return;
+  const input = document.getElementById('dictInput');
+  const userAnswer = input.value.trim();
+  if (!userAnswer) return;
+
+  const w = dictWords[dictPos];
+  const correct = userAnswer === w.hz;
+
+  dictLocked = true;
+  input.disabled = true;
+  document.getElementById('dictSubmitBtn').disabled = true;
+
+  if (correct) {
+    input.classList.add('correct');
+    dictOkCount++;
+    document.getElementById('dictOk').textContent = dictOkCount;
+    setTimeout(() => { dictPos++; renderDictQuestion(); }, 600);
+  } else {
+    input.classList.add('wrong');
+    dictErrCount++;
+    document.getElementById('dictErr').textContent = dictErrCount;
+    dictWrongWords.push(w);
+    // 显示正确答案
+    document.getElementById('dictAnswerReveal').innerHTML =
+      `<span class="answer-hz">${w.hz}</span><span class="answer-py">${w.py}</span>`;
+    setTimeout(() => { dictPos++; renderDictQuestion(); }, 2000);
+  }
+}
+
+function skipDictWord() {
+  if (dictLocked || dictDone) return;
+  const w = dictWords[dictPos];
+  dictLocked = true;
+  dictErrCount++;
+  document.getElementById('dictErr').textContent = dictErrCount;
+  dictWrongWords.push(w);
+  document.getElementById('dictInput').classList.add('wrong');
+  document.getElementById('dictInput').disabled = true;
+  document.getElementById('dictSubmitBtn').disabled = true;
+  document.getElementById('dictAnswerReveal').innerHTML =
+    `<span class="answer-hz">${w.hz}</span><span class="answer-py">${w.py}</span>`;
+  setTimeout(() => { dictPos++; renderDictQuestion(); }, 2000);
+}
+
+function finishDict() {
+  dictDone = true;
+  clearInterval(dictTimerInterval);
+  document.getElementById('dictCard').style.display = 'none';
+
+  const elapsed = Math.round((Date.now() - dictStartTime) / 1000);
+  const total = dictOkCount + dictErrCount;
+  const acc = total > 0 ? Math.round(dictOkCount / total * 100) : 0;
+
+  document.getElementById('dictResDuration').textContent = formatTime(elapsed);
+  document.getElementById('dictResOk').textContent = dictOkCount;
+  document.getElementById('dictResErr').textContent = dictErrCount;
+  document.getElementById('dictResAcc').textContent = acc + '%';
+
+  // 错词列表
+  const wrongListEl = document.getElementById('dictWrongList');
+  wrongListEl.innerHTML = '';
+  if (dictWrongWords.length > 0) {
+    dictWrongWords.forEach(w => {
+      const item = document.createElement('div');
+      item.className = 'dict-wrong-item';
+      item.innerHTML = `<span class="whz">${w.hz}</span><span class="wpy">${w.py}</span><span class="wth">${w.th}</span>`;
+      wrongListEl.appendChild(item);
+    });
+    document.getElementById('dictRetryBtn').style.display = 'inline-block';
+  } else {
+    wrongListEl.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:12px">全部正确！太棒了 🌟</div>';
+    document.getElementById('dictRetryBtn').style.display = 'none';
+  }
+
+  document.getElementById('dictDone').style.display = 'block';
+}
+
+function retryWrongWords() {
+  if (dictWrongWords.length === 0) return;
+  startDict(dictWrongWords);
+}
+
+function updateDictTimer() {
+  if (!dictStartTime) return;
+  const elapsed = Math.round((Date.now() - dictStartTime) / 1000);
+  document.getElementById('dictTimer').textContent = formatTime(elapsed);
+}
+
+// 听写输入框回车提交
+document.addEventListener('DOMContentLoaded', () => {
+  const dictInput = document.getElementById('dictInput');
+  if (dictInput) {
+    dictInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitDictAnswer();
+    });
+  }
+});
 
 // ==================== 词单编辑器 ====================
 let editorOpen = false;
