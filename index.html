@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>汉语词卡 · Chinese Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== 全局 ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f0eb;
+    --card-bg: #ffffff;
+    --primary: #c0392b;
+    --primary-light: #e74c3c;
+    --accent: #2980b9;
+    --text-dark: #2c3e50;
+    --text-mid: #555;
+    --text-light: #888;
+    --border: #ddd;
+    --radius: 18px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.13);
+    --t1: #888888;
+    --t2: #27ae60;
+    --t3: #2980b9;
+    --t4: #c0392b;
+    --t5: #999;
+  }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== 顶部栏 ===== */
+  .topbar {
+    width: 100%;
+    max-width: 760px;
+    padding: 12px 18px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select, .btn-sm {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    background: #fff;
+    color: var(--text-dark);
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+  }
+  select:focus, .btn-sm:focus { border-color: var(--primary); }
+  .btn-sm { font-weight: 600; }
+  .btn-sm:hover { background: #f0f0f0; }
+  .btn-sm.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* 主模式切换（闪卡/配对） */
+  .main-mode-toggle {
+    display: flex;
+    background: #2c3e50;
+    border-radius: 22px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .main-mode-toggle button {
+    border: none;
+    border-radius: 19px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    transition: all .2s;
+  }
+  .main-mode-toggle button.on {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  /* 普通模式切换 */
+  .mode-toggle {
+    display: flex;
+    background: #e8e8e8;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .mode-toggle button {
+    border: none;
+    border-radius: 17px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-mid);
+    transition: all .2s;
+  }
+  .mode-toggle button.on {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+
+  /* ===== 进度条 ===== */
+  .progress-wrap {
+    width: 100%;
+    max-width: 760px;
+    padding: 0 18px 8px;
+  }
+  .progress-bar-bg {
+    height: 6px;
+    background: #ddd;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+  .progress-text {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  /* ===== 闪卡区域 ===== */
+  .card-scene {
+    width: 100%;
+    max-width: 760px;
+    padding: 0 18px;
+    perspective: 1200px;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 8px;
+  }
+  .card-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 58%;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(.4,0,.2,1);
+  }
+  .card-wrapper.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card-back { transform: rotateY(180deg); }
+
+  .card-hanzi {
+    font-size: clamp(72px, 16vw, 130px);
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: 6px;
+    line-height: 1.1;
+    text-align: center;
+  }
+  .card-pinyin {
+    font-family: "Andika", "Noto Sans SC", sans-serif;
+    font-size: clamp(30px, 7vw, 54px);
+    margin-top: 10px;
+    letter-spacing: 3px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .card-thai {
+    font-size: clamp(16px, 3.5vw, 26px);
+    color: #7f5af0;
+    margin-top: 14px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .card-tap-hint {
+    font-size: 13px;
+    color: #bbb;
+    margin-top: 14px;
+  }
+
+  /* 声调颜色 */
+  .t1 { color: var(--t1); }
+  .t2 { color: var(--t2); }
+  .t3 { color: var(--t3); }
+  .t4 { color: var(--t4); }
+  .t5 { color: var(--t5); }
+
+  /* ===== 控制按钮区 ===== */
+  .controls {
+    width: 100%;
+    max-width: 760px;
+    padding: 14px 18px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-nav {
+    border: none;
+    border-radius: 50px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .18s;
+    color: #fff;
+    min-width: 90px;
+  }
+  .btn-nav:active { transform: scale(.95); }
+  .btn-prev { background: #95a5a6; }
+  .btn-prev:hover { background: #7f8c8d; }
+  .btn-next { background: var(--accent); }
+  .btn-next:hover { background: #1a6a9a; }
+  .btn-flip { background: var(--primary); flex: 1; max-width: 200px; }
+  .btn-flip:hover { background: var(--primary-light); }
+
+  /* 自评按钮 */
+  .self-eval {
+    width: 100%;
+    max-width: 760px;
+    padding: 12px 18px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .self-eval button {
+    flex: 1;
+    max-width: 160px;
+    border: none;
+    border-radius: 50px;
+    padding: 11px 0;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .18s;
+    color: #fff;
+  }
+  .self-eval button:active { transform: scale(.95); }
+  .btn-know { background: #27ae60; }
+  .btn-know:hover { background: #219a52; }
+  .btn-fuzzy { background: #e67e22; }
+  .btn-fuzzy:hover { background: #ca6a12; }
+  .btn-dontknow { background: #c0392b; }
+  .btn-dontknow:hover { background: #a93226; }
+
+  /* 统计区 */
+  .stats {
+    width: 100%;
+    max-width: 760px;
+    padding: 12px 18px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .stat-item { text-align: center; min-width: 60px; }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+  .stat-know .stat-num { color: #27ae60; }
+  .stat-fuzzy .stat-num { color: #e67e22; }
+  .stat-dontknow .stat-num { color: #c0392b; }
+  .stat-remain .stat-num { color: var(--accent); }
+
+  /* 完成横幅 */
+  .done-banner {
+    width: 100%;
+    max-width: 760px;
+    margin: 20px 18px 0;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 24px;
+    text-align: center;
+    display: none;
+  }
+  .done-banner h2 { font-size: 28px; color: var(--primary); }
+  .done-banner p { color: var(--text-mid); margin-top: 10px; font-size: 16px; }
+  .btn-restart {
+    margin-top: 20px;
+    border: none;
+    border-radius: 50px;
+    padding: 13px 40px;
+    font-size: 16px;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn-restart:hover { background: var(--primary-light); }
+
+  /* ===== 配对练习区域 ===== */
+  #matchArea {
+    width: 100%;
+    max-width: 760px;
+    padding: 0 18px;
+    display: none;
+  }
+
+  /* 配对顶部工具栏 */
+  .match-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .match-toolbar label {
+    font-size: 13px;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+  .match-toolbar select {
+    padding: 5px 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+  .match-timer {
+    margin-left: auto;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 56px;
+    text-align: right;
+  }
+  .match-score {
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .match-score .sc-ok { color: #27ae60; }
+  .match-score .sc-err { color: #c0392b; }
+
+  /* 配对左右列布局 */
+  .match-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .match-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* 配对卡片 */
+  .match-card {
+    background: #fff;
+    border: 2.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, transform .1s;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-all;
+    user-select: none;
+  }
+  .match-card:hover:not(.matched):not(.disabled) {
+    border-color: var(--accent);
+    background: #f0f7ff;
+  }
+  .match-card.selected {
+    border-color: var(--accent);
+    background: #dbeeff;
+    transform: scale(1.03);
+  }
+  .match-card.matched {
+    border-color: #27ae60;
+    background: #eafaf1;
+    color: #27ae60;
+    cursor: default;
+    opacity: 0.75;
+  }
+  .match-card.error {
+    border-color: #c0392b;
+    background: #fdecea;
+    animation: shake .35s ease;
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .match-card.disabled { cursor: default; }
+
+  /* 配对汉字字体 */
+  .match-hz {
+    font-size: clamp(22px, 5vw, 34px);
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: 3px;
+  }
+  /* 配对拼音字体 */
+  .match-py {
+    font-family: "Andika", "Noto Sans SC", sans-serif;
+    font-size: clamp(15px, 3.5vw, 22px);
+    letter-spacing: 1px;
+    line-height: 1.5;
+  }
+  /* 配对泰语字体 */
+  .match-th {
+    font-size: clamp(13px, 3vw, 18px);
+    color: #7f5af0;
+    line-height: 1.5;
+  }
+
+  /* 配对完成横幅 */
+  .match-done {
+    display: none;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 24px;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .match-done h2 { font-size: 26px; color: var(--primary); }
+  .match-done .result-grid {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 18px 0;
+    flex-wrap: wrap;
+  }
+  .match-done .ritem { text-align: center; }
+  .match-done .rnum { font-size: 30px; font-weight: 700; }
+  .match-done .rlabel { font-size: 13px; color: var(--text-light); margin-top: 3px; }
+  .rnum.time-color { color: var(--accent); }
+  .rnum.ok-color { color: #27ae60; }
+  .rnum.err-color { color: #c0392b; }
+  .btn-match-restart {
+    border: none;
+    border-radius: 50px;
+    padding: 13px 40px;
+    font-size: 16px;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .btn-match-restart:hover { background: var(--primary-light); }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-light);
+    font-size: 15px;
+  }
+
+  /* ===== 词单编辑器 ===== */
+  .editor-toggle {
+    width: 100%;
+    max-width: 760px;
+    padding: 18px 18px 0;
+    text-align: center;
+  }
+  .btn-editor {
+    border: 1.5px dashed #bbb;
+    background: transparent;
+    border-radius: 10px;
+    padding: 8px 22px;
+    font-size: 14px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-editor:hover { border-color: var(--primary); color: var(--primary); }
+  .editor-panel {
+    width: 100%;
+    max-width: 760px;
+    margin: 14px 0 0;
+    padding: 0 18px;
+    display: none;
+  }
+  .editor-panel.open { display: block; }
+  .editor-inner {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+  .editor-inner h3 { font-size: 16px; color: var(--text-dark); margin-bottom: 8px; }
+  .editor-inner p { font-size: 13px; color: var(--text-light); margin-bottom: 12px; line-height: 1.7; }
+  .lesson-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+  .lesson-tab {
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+    color: var(--text-mid);
+    transition: all .15s;
+  }
+  .lesson-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-add-lesson {
+    border: 1.5px dashed #bbb;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 13px;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+  }
+  .btn-add-lesson:hover { border-color: var(--primary); color: var(--primary); }
+  .lesson-name-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .lesson-name-row input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 14px;
+    outline: none;
+  }
+  .lesson-name-row input:focus { border-color: var(--primary); }
+  .btn-del-lesson {
+    border: 1.5px solid #e74c3c;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    background: transparent;
+    color: #e74c3c;
+    cursor: pointer;
+  }
+  textarea.word-input {
+    width: 100%;
+    min-height: 180px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: "Courier New", monospace;
+    line-height: 1.8;
+    resize: vertical;
+    outline: none;
+    color: var(--text-dark);
+  }
+  textarea.word-input:focus { border-color: var(--primary); }
+  .editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+  .btn-save {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 26px;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn-save:hover { background: var(--primary-light); }
+  .save-tip {
+    font-size: 13px;
+    color: #27ae60;
+    align-self: center;
+    display: none;
+  }
+  .io-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #eee;
+  }
+  .io-bar button {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    color: var(--text-dark);
+    transition: all .18s;
+  }
+  .io-bar .btn-export { border-color: var(--accent); color: var(--accent); }
+  .io-bar .btn-export:hover { background: var(--accent); color: #fff; }
+  .io-bar .btn-import { border-color: #27ae60; color: #27ae60; }
+  .io-bar .btn-import:hover { background: #27ae60; color: #fff; }
+  .import-tip {
+    font-size: 12px;
+    color: #e67e22;
+    margin-top: 6px;
+    text-align: center;
+    display: none;
+  }
+
+  /* 响应式 */
+  @media (max-width: 480px) {
+    .card-hanzi { font-size: 56px; }
+    .card-pinyin { font-size: 26px; }
+    .card-thai { font-size: 16px; }
+    .match-card { padding: 9px 6px; min-height: 50px; }
+    .match-hz { font-size: 20px; }
+    .match-py { font-size: 13px; }
+    .match-th { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部控制栏 ===== -->
+<div class="topbar">
+  <div class="topbar-left">
+    <!-- 主模式切换：闪卡 / 配对 -->
+    <div class="main-mode-toggle">
+      <button id="mainFlash" class="on" onclick="switchMainMode('flash')">🃏 闪卡练习</button>
+      <button id="mainMatch" onclick="switchMainMode('match')">🔗 配对练习</button>
+    </div>
+    <!-- 课程选择 -->
+    <select id="lessonSelect"></select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="flashControls">
+    <!-- 闪卡模式：汉字↔拼音 切换 -->
+    <div class="mode-toggle">
+      <button id="modeHz" class="on" onclick="setCardMode('hz')">汉字→拼音</button>
+      <button id="modePy" onclick="setCardMode('py')">拼音→汉字</button>
+    </div>
+    <!-- 课堂/自学 -->
+    <div class="mode-toggle">
+      <button id="modeClass" onclick="setUseMode('class')">课堂</button>
+      <button id="modeSelf" class="on" onclick="setUseMode('self')">自学</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 闪卡区域 ===== -->
+<div id="flashArea" style="width:100%;display:flex;flex-direction:column;align-items:center">
+  <!-- 进度条 -->
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">0 / 0</div>
+  </div>
+
+  <!-- 闪卡 -->
+  <div class="card-scene" id="cardScene" onclick="flipCard()">
+    <div class="card-wrapper" id="cardWrapper">
+      <div class="card-face card-front" id="cardFront">
+        <div class="empty-state">请先在下方添加词单</div>
+      </div>
+      <div class="card-face card-back" id="cardBack"></div>
+    </div>
+  </div>
+
+  <!-- 主控制按钮 -->
+  <div class="controls" id="controls">
+    <button class="btn-nav btn-prev" onclick="prevCard()">◀ 上一张</button>
+    <button class="btn-nav btn-flip" onclick="flipCard()">翻转</button>
+    <button class="btn-nav btn-next" onclick="nextCard()">下一张 ▶</button>
+  </div>
+
+  <!-- 自评按钮 -->
+  <div class="self-eval" id="selfEval">
+    <button class="btn-know" onclick="evalCard('know')">✓ 认识</button>
+    <button class="btn-fuzzy" onclick="evalCard('fuzzy')">△ 模糊</button>
+    <button class="btn-dontknow" onclick="evalCard('dontknow')">✗ 不认识</button>
+  </div>
+
+  <!-- 统计 -->
+  <div class="stats" id="statsArea">
+    <div class="stat-item stat-know">
+      <div class="stat-num" id="statKnow">0</div>
+      <div class="stat-label">认识</div>
+    </div>
+    <div class="stat-item stat-fuzzy">
+      <div class="stat-num" id="statFuzzy">0</div>
+      <div class="stat-label">模糊</div>
+    </div>
+    <div class="stat-item stat-dontknow">
+      <div class="stat-num" id="statDontknow">0</div>
+      <div class="stat-label">不认识</div>
+    </div>
+    <div class="stat-item stat-remain">
+      <div class="stat-num" id="statRemain">0</div>
+      <div class="stat-label">剩余</div>
+    </div>
+  </div>
+
+  <!-- 闪卡完成横幅 -->
+  <div class="done-banner" id="doneBanner">
+    <h2>🎉 本课完成！</h2>
+    <p id="doneMsg"></p>
+    <button class="btn-restart" onclick="restartLesson()">重新学习</button>
+  </div>
+</div>
+
+<!-- ===== 配对练习区域 ===== -->
+<div id="matchArea">
+  <!-- 工具栏 -->
+  <div class="match-toolbar">
+    <label>配对方向：</label>
+    <div class="mode-toggle">
+      <button id="matchDirHz" class="on" onclick="setMatchDir('hz')">汉字↔拼音</button>
+      <button id="matchDirTh" onclick="setMatchDir('th')">汉字↔泰语</button>
+    </div>
+    <label style="margin-left:8px">每轮：</label>
+    <select id="matchSizeSelect" onchange="startMatch()">
+      <option value="8">8对</option>
+      <option value="12">12对</option>
+      <option value="0">全部</option>
+    </select>
+    <div class="match-timer" id="matchTimer">0:00</div>
+    <div class="match-score">
+      <span class="sc-ok">✓ <span id="matchOk">0</span></span>
+      <span class="sc-err">✗ <span id="matchErr">0</span></span>
+    </div>
+  </div>
+
+  <!-- 左右两列 -->
+  <div class="match-columns">
+    <div class="match-col" id="matchLeft"></div>
+    <div class="match-col" id="matchRight"></div>
+  </div>
+
+  <!-- 配对完成横幅 -->
+  <div class="match-done" id="matchDone">
+    <h2>🎉 配对完成！</h2>
+    <div class="result-grid">
+      <div class="ritem">
+        <div class="rnum time-color" id="resDuration">—</div>
+        <div class="rlabel">用时</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum ok-color" id="resOk">—</div>
+        <div class="rlabel">配对正确</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum err-color" id="resErr">—</div>
+        <div class="rlabel">配对错误</div>
+      </div>
+      <div class="ritem">
+        <div class="rnum" id="resAcc" style="color:var(--primary)">—</div>
+        <div class="rlabel">正确率</div>
+      </div>
+    </div>
+    <button class="btn-match-restart" onclick="startMatch()">再来一轮</button>
+  </div>
+</div>
+
+<!-- 词单编辑器入口 -->
+<div class="editor-toggle" id="editorToggle" style="display:none">
+  <button class="btn-editor" onclick="toggleEditor()">📝 编辑词单（教师模式）</button>
+</div>
+
+<!-- 词单编辑器面板 -->
+<div class="editor-panel" id="editorPanel">
+  <div class="editor-inner">
+    <h3>📚 词单管理（教师专用）</h3>
+    <p>
+      每行一个词，格式：<code>汉字 | 拼音 | 泰语释义</code><br>
+      拼音请带声调符号，例如 <code>nǐ hǎo</code>。<br>
+      声调颜色：<span class="t1">一声</span>　<span class="t2">二声</span>　<span class="t3">三声</span>　<span class="t4">四声</span>　<span class="t5">轻声</span><br>
+      <strong style="color:var(--primary)">编辑完成后请点「导出备份」，将 json 文件发给开发者更新网页</strong>
+    </p>
+    <div class="lesson-tabs" id="lessonTabs"></div>
+    <div class="lesson-name-row">
+      <input type="text" id="lessonNameInput" placeholder="课程名称，例如：第1课">
+      <button class="btn-del-lesson" onclick="deleteCurrentLesson()">删除本课</button>
+    </div>
+    <textarea class="word-input" id="wordInput" placeholder="你好 | nǐ hǎo | สวัสดี&#10;谢谢 | xiè xie | ขอบคุณ&#10;老师 | lǎo shī | ครู / อาจารย์"></textarea>
+    <div class="editor-actions">
+      <span class="save-tip" id="saveTip">✓ 已保存</span>
+      <button class="btn-save" onclick="saveCurrentLesson()">保存词单</button>
+      <button class="btn-add-lesson" onclick="addLesson()" style="border-radius:8px;padding:9px 14px;">+ 新增课</button>
+    </div>
+    <div class="io-bar">
+      <button class="btn-export" onclick="exportData()">📤 导出备份</button>
+      <button class="btn-import" onclick="document.getElementById('importFile').click()">📥 导入恢复</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <div class="import-tip" id="importTip"></div>
+  </div>
+</div>
+
+<div style="height:40px"></div>
+
+<script>
+// ==================== 词库数据（内置） ====================
+const BUILTIN_LESSONS = [
+  {
+    name: '第4课',
+    words: [
+      { hz: '叫', py: 'jiào', th: 'เรียก (ชื่อ)' },
+      { hz: '名字', py: 'míng zi', th: 'ชื่อ' },
+      { hz: '我', py: 'wǒ', th: 'ฉัน / ผม' },
+      { hz: '什么', py: 'shén me', th: 'อะไร' },
+      { hz: '学生', py: 'xué sheng', th: 'นักเรียน' },
+      { hz: '姓', py: 'xìng', th: 'นามสกุล' },
+      { hz: '老师', py: 'lǎo shī', th: 'ครู / อาจารย์' },
+      { hz: '是', py: 'shì', th: 'คือ / เป็น' },
+      { hz: '不', py: 'bù', th: 'ไม่ (ปฏิเสธ)' },
+      { hz: '你', py: 'nǐ', th: 'คุณ' },
+      { hz: '学', py: 'xué', th: 'เรียน' },
+      { hz: '好', py: 'hǎo', th: 'ดี' },
+      { hz: '留学生', py: 'liú xué shēng', th: 'นักเรียนต่างชาติที่มาเรียนในประเทศของคุณ' },
+      { hz: '吗', py: 'ma', th: 'คำความคาดหวัง (ประโยคคำถาม)' },
+      { hz: '他', py: 'tā', th: 'เขา' },
+      { hz: '汉语', py: 'Hàn yǔ', th: 'ภาษาจีน' },
+      { hz: '李', py: 'Lǐ', th: 'หลี่ (นามสกุล)' },
+      { hz: '王', py: 'Wáng', th: 'วัง (นามสกุล)' },
+      { hz: '中国', py: 'Zhōng guó', th: 'จีน' },
+    ]
+  }
+];
+
+// ==================== 数据层 ====================
+const STORAGE_KEY_STATE = 'hz_flashcard_state';
+function loadState() {
+  try { const r = localStorage.getItem(STORAGE_KEY_STATE); return r ? JSON.parse(r) : null; }
+  catch { return null; }
+}
+function saveState(s) { localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(s)); }
+
+let currentLessonIdx = 0;
+const _st = loadState();
+if (_st && typeof _st.lessonIdx === 'number') {
+  currentLessonIdx = _st.lessonIdx;
+  if (currentLessonIdx >= BUILTIN_LESSONS.length) currentLessonIdx = 0;
+}
+saveState({ lessonIdx: currentLessonIdx });
+
+// ==================== 主模式 ====================
+let mainMode = 'flash'; // 'flash' | 'match'
+
+function switchMainMode(m) {
+  mainMode = m;
+  document.getElementById('mainFlash').classList.toggle('on', m === 'flash');
+  document.getElementById('mainMatch').classList.toggle('on', m === 'match');
+  document.getElementById('flashArea').style.display = m === 'flash' ? 'flex' : 'none';
+  document.getElementById('matchArea').style.display = m === 'match' ? 'block' : 'none';
+  document.getElementById('flashControls').style.display = m === 'flash' ? 'flex' : 'none';
+  if (m === 'match') startMatch();
+}
+
+// ==================== 状态（闪卡） ====================
+let cardMode = 'hz';
+let useMode = 'self';
+let deck = [];
+let deckPos = 0;
+let isFlipped = false;
+let stats = { know: 0, fuzzy: 0, dontknow: 0 };
+let selfEvalVisible = false;
+
+// ==================== 拼音声调染色 ====================
+const TONE_MAP = {
+  'āáǎà': [1,2,3,4], 'ēéěè': [1,2,3,4],
+  'īíǐì': [1,2,3,4], 'ōóǒò': [1,2,3,4],
+  'ūúǔù': [1,2,3,4], 'ǖǘǚǜ': [1,2,3,4]
+};
+function getToneNumber(c) {
+  for (const [chars, tones] of Object.entries(TONE_MAP)) {
+    const idx = [...chars].indexOf(c);
+    if (idx >= 0) return tones[idx];
+  }
+  return 0;
+}
+function detectSyllableTone(syl) {
+  for (const ch of syl) { const t = getToneNumber(ch); if (t > 0) return t; }
+  return 5;
+}
+function colorPinyin(py) {
+  return py.split(' ').map(syl => {
+    const tone = detectSyllableTone(syl);
+    return tone === 0 ? syl : `<span class="t${tone}">${syl}</span>`;
+  }).join(' ');
+}
+
+// ==================== 词单解析 ====================
+function parseWords(text) {
+  return text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
+    .map(l => {
+      const p = l.split('|').map(s => s.trim());
+      if (p.length >= 3) return { hz: p[0], py: p[1], th: p[2] };
+      if (p.length === 2) return { hz: p[0], py: p[1], th: '' };
+      return null;
+    }).filter(Boolean);
+}
+function wordsToText(words) { return words.map(w => `${w.hz} | ${w.py} | ${w.th}`).join('\n'); }
+
+// ==================== 课程 ====================
+function currentLesson() { return BUILTIN_LESSONS[currentLessonIdx] || { name: '', words: [] }; }
+
+function buildLessonSelect() {
+  const sel = document.getElementById('lessonSelect');
+  sel.innerHTML = '';
+  BUILTIN_LESSONS.forEach((l, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = l.name;
+    if (i === currentLessonIdx) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+document.getElementById('lessonSelect').addEventListener('change', function() {
+  currentLessonIdx = parseInt(this.value);
+  saveState({ lessonIdx: currentLessonIdx });
+  if (mainMode === 'flash') initDeck();
+  else startMatch();
+});
+
+// ==================== 闪卡初始化 ====================
+function initDeck() {
+  const words = currentLesson().words;
+  deck = [...words];
+  shuffleDeck();
+  deckPos = 0; isFlipped = false;
+  stats = { know: 0, fuzzy: 0, dontknow: 0 };
+  updateStats();
+  document.getElementById('doneBanner').style.display = 'none';
+  document.getElementById('cardScene').style.display = '';
+  document.getElementById('controls').style.display = '';
+  renderCard(); updateProgress();
+}
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+}
+
+// ==================== 渲染闪卡 ====================
+function renderCard() {
+  const front = document.getElementById('cardFront');
+  const back = document.getElementById('cardBack');
+  const wrapper = document.getElementById('cardWrapper');
+  wrapper.classList.remove('flipped');
+  isFlipped = false; selfEvalVisible = false; updateSelfEval();
+  if (deck.length === 0) {
+    front.innerHTML = '<div class="empty-state">本课暂无词汇</div>';
+    back.innerHTML = ''; return;
+  }
+  if (deckPos >= deck.length) { showDone(); return; }
+  const word = deck[deckPos];
+  const pyColored = colorPinyin(word.py);
+  if (cardMode === 'hz') {
+    front.innerHTML = `<div class="card-hanzi">${word.hz}</div><div class="card-tap-hint">点击翻转</div>`;
+    back.innerHTML = `
+      <div class="card-hanzi" style="font-size:clamp(60px,12vw,100px)">${word.hz}</div>
+      <div class="card-pinyin" style="font-size:clamp(44px,10vw,78px)">${pyColored}</div>
+      <div class="card-thai" style="font-size:clamp(20px,4.5vw,34px)">${word.th}</div>`;
+  } else {
+    front.innerHTML = `<div class="card-pinyin" style="font-size:clamp(42px,10vw,80px)">${pyColored}</div><div class="card-tap-hint">点击翻转</div>`;
+    back.innerHTML = `
+      <div class="card-hanzi">${word.hz}</div>
+      <div class="card-pinyin">${pyColored}</div>
+      <div class="card-thai">${word.th}</div>`;
+  }
+}
+
+function flipCard() {
+  if (deck.length === 0 || deckPos >= deck.length) return;
+  const wrapper = document.getElementById('cardWrapper');
+  isFlipped = !isFlipped;
+  wrapper.classList.toggle('flipped', isFlipped);
+  if (isFlipped) { selfEvalVisible = true; updateSelfEval(); }
+}
+function nextCard() {
+  if (deck.length === 0) return;
+  if (deckPos < deck.length - 1) deckPos++;
+  else { if (useMode === 'class') deckPos = 0; else { showDone(); return; } }
+  renderCard(); updateProgress();
+}
+function prevCard() {
+  if (deck.length === 0) return;
+  if (deckPos > 0) deckPos--;
+  renderCard(); updateProgress();
+}
+function evalCard(result) {
+  if (!isFlipped) return;
+  stats[result]++;
+  if (result === 'dontknow' || result === 'fuzzy') deck.push(deck[deckPos]);
+  deckPos++; renderCard(); updateProgress(); updateStats();
+}
+function updateSelfEval() {
+  const se = document.getElementById('selfEval');
+  se.style.display = (useMode === 'self' && selfEvalVisible && deck.length > 0 && deckPos < deck.length) ? 'flex' : 'none';
+}
+function updateProgress() {
+  const total = currentLesson().words.length;
+  const done = Math.min(deckPos, total);
+  const pct = total > 0 ? (done / total) * 100 : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${total}`;
+  document.getElementById('statRemain').textContent = Math.max(0, deck.length - deckPos);
+}
+function updateStats() {
+  document.getElementById('statKnow').textContent = stats.know;
+  document.getElementById('statFuzzy').textContent = stats.fuzzy;
+  document.getElementById('statDontknow').textContent = stats.dontknow;
+}
+function showDone() {
+  document.getElementById('doneBanner').style.display = 'block';
+  document.getElementById('cardScene').style.display = 'none';
+  document.getElementById('controls').style.display = 'none';
+  document.getElementById('selfEval').style.display = 'none';
+  document.getElementById('doneMsg').textContent =
+    `本课共 ${currentLesson().words.length} 个词　认识 ${stats.know} 个　模糊 ${stats.fuzzy} 个　不认识 ${stats.dontknow} 个`;
+}
+function restartLesson() { initDeck(); }
+function setCardMode(m) {
+  cardMode = m;
+  document.getElementById('modeHz').classList.toggle('on', m === 'hz');
+  document.getElementById('modePy').classList.toggle('on', m === 'py');
+  renderCard();
+}
+function setUseMode(m) {
+  useMode = m;
+  document.getElementById('modeClass').classList.toggle('on', m === 'class');
+  document.getElementById('modeSelf').classList.toggle('on', m === 'self');
+  const isSelf = m === 'self';
+  document.getElementById('statsArea').style.display = isSelf ? 'flex' : 'none';
+  updateSelfEval();
+}
+
+// ==================== 配对练习 ====================
+let matchDir = 'hz';       // 'hz' = 汉字↔拼音, 'th' = 汉字↔泰语
+let matchWords = [];       // 本轮词对
+let matchSelected = null;  // 当前选中的卡片 { side, idx, el }
+let matchOkCount = 0;
+let matchErrCount = 0;
+let matchStartTime = null;
+let matchTimerInterval = null;
+let matchDone = false;
+
+function setMatchDir(d) {
+  matchDir = d;
+  document.getElementById('matchDirHz').classList.toggle('on', d === 'hz');
+  document.getElementById('matchDirTh').classList.toggle('on', d === 'th');
+  startMatch();
+}
+
+function startMatch() {
+  // 停止旧计时
+  clearInterval(matchTimerInterval);
+  document.getElementById('matchDone').style.display = 'none';
+  document.getElementById('matchTimer').textContent = '0:00';
+  matchOkCount = 0; matchErrCount = 0;
+  document.getElementById('matchOk').textContent = '0';
+  document.getElementById('matchErr').textContent = '0';
+  matchSelected = null; matchDone = false;
+
+  // 取词
+  const words = currentLesson().words;
+  if (words.length === 0) {
+    document.getElementById('matchLeft').innerHTML = '<div class="empty-state" style="padding:30px">本课暂无词汇</div>';
+    document.getElementById('matchRight').innerHTML = '';
+    return;
+  }
+
+  const sizeVal = parseInt(document.getElementById('matchSizeSelect').value);
+  let pool = [...words];
+  // 随机取
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  matchWords = sizeVal === 0 ? pool : pool.slice(0, Math.min(sizeVal, pool.length));
+
+  // 分别打乱左列（汉字）和右列（答案）
+  const leftOrder = shuffle([...matchWords.keys()]);
+  const rightOrder = shuffle([...matchWords.keys()]);
+
+  renderMatchColumns(leftOrder, rightOrder);
+
+  // 开始计时
+  matchStartTime = Date.now();
+  matchTimerInterval = setInterval(updateMatchTimer, 500);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderMatchColumns(leftOrder, rightOrder) {
+  const leftEl = document.getElementById('matchLeft');
+  const rightEl = document.getElementById('matchRight');
+  leftEl.innerHTML = ''; rightEl.innerHTML = '';
+
+  leftOrder.forEach(idx => {
+    const w = matchWords[idx];
+    const el = document.createElement('div');
+    el.className = 'match-card';
+    el.dataset.idx = idx; el.dataset.side = 'left';
+    el.innerHTML = `<span class="match-hz">${w.hz}</span>`;
+    el.onclick = () => onMatchClick(el);
+    leftEl.appendChild(el);
+  });
+
+  rightOrder.forEach(idx => {
+    const w = matchWords[idx];
+    const el = document.createElement('div');
+    el.className = 'match-card';
+    el.dataset.idx = idx; el.dataset.side = 'right';
+    if (matchDir === 'hz') {
+      el.innerHTML = `<span class="match-py">${colorPinyin(w.py)}</span>`;
+    } else {
+      el.innerHTML = `<span class="match-th">${w.th}</span>`;
+    }
+    el.onclick = () => onMatchClick(el);
+    rightEl.appendChild(el);
+  });
+}
+
+function onMatchClick(el) {
+  if (matchDone) return;
+  if (el.classList.contains('matched') || el.classList.contains('disabled')) return;
+
+  const side = el.dataset.side;
+  const idx = parseInt(el.dataset.idx);
+
+  // 同侧再点：切换选中
+  if (matchSelected && matchSelected.side === side) {
+    matchSelected.el.classList.remove('selected');
+    if (matchSelected.el === el) { matchSelected = null; return; }
+    el.classList.add('selected');
+    matchSelected = { side, idx, el };
+    return;
+  }
+
+  if (!matchSelected) {
+    el.classList.add('selected');
+    matchSelected = { side, idx, el };
+    return;
+  }
+
+  // 两侧各选一张 → 判断
+  const other = matchSelected;
+  el.classList.add('selected');
+
+  if (other.idx === idx) {
+    // 正确
+    el.classList.remove('selected'); other.el.classList.remove('selected');
+    el.classList.add('matched'); other.el.classList.add('matched');
+    matchOkCount++;
+    document.getElementById('matchOk').textContent = matchOkCount;
+    matchSelected = null;
+    // 检查是否全部完成
+    checkMatchComplete();
+  } else {
+    // 错误
+    matchErrCount++;
+    document.getElementById('matchErr').textContent = matchErrCount;
+    el.classList.add('error'); other.el.classList.add('error');
+    setTimeout(() => {
+      el.classList.remove('selected', 'error');
+      other.el.classList.remove('selected', 'error');
+    }, 600);
+    matchSelected = null;
+  }
+}
+
+function checkMatchComplete() {
+  const total = matchWords.length;
+  if (matchOkCount >= total) {
+    matchDone = true;
+    clearInterval(matchTimerInterval);
+    const elapsed = Math.round((Date.now() - matchStartTime) / 1000);
+    const acc = Math.round(matchOkCount / (matchOkCount + matchErrCount) * 100);
+    document.getElementById('resDuration').textContent = formatTime(elapsed);
+    document.getElementById('resOk').textContent = matchOkCount;
+    document.getElementById('resErr').textContent = matchErrCount;
+    document.getElementById('resAcc').textContent = acc + '%';
+    document.getElementById('matchDone').style.display = 'block';
+  }
+}
+
+function updateMatchTimer() {
+  if (!matchStartTime) return;
+  const elapsed = Math.round((Date.now() - matchStartTime) / 1000);
+  document.getElementById('matchTimer').textContent = formatTime(elapsed);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+// ==================== 词单编辑器 ====================
+let editorOpen = false;
+function toggleEditor() {
+  editorOpen = !editorOpen;
+  document.getElementById('editorPanel').classList.toggle('open', editorOpen);
+  if (editorOpen) { renderEditorTabs(); loadEditorContent(); }
+}
+function renderEditorTabs() {
+  const tabs = document.getElementById('lessonTabs');
+  tabs.innerHTML = '';
+  BUILTIN_LESSONS.forEach((l, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'lesson-tab' + (i === currentLessonIdx ? ' active' : '');
+    btn.textContent = l.name;
+    btn.onclick = () => {
+      currentLessonIdx = i;
+      saveState({ lessonIdx: currentLessonIdx });
+      document.getElementById('lessonSelect').value = i;
+      renderEditorTabs(); loadEditorContent(); initDeck();
+    };
+    tabs.appendChild(btn);
+  });
+}
+function loadEditorContent() {
+  const lesson = currentLesson();
+  document.getElementById('lessonNameInput').value = lesson.name;
+  document.getElementById('wordInput').value = wordsToText(lesson.words);
+}
+function saveCurrentLesson() {
+  const name = document.getElementById('lessonNameInput').value.trim() || `第${currentLessonIdx+1}课`;
+  const text = document.getElementById('wordInput').value;
+  const words = parseWords(text);
+  BUILTIN_LESSONS[currentLessonIdx] = { name, words };
+  buildLessonSelect(); renderEditorTabs(); initDeck();
+  const tip = document.getElementById('saveTip');
+  tip.textContent = '✓ 已保存（请点「导出备份」发给开发者更新网页）';
+  tip.style.display = 'inline'; tip.style.color = '#e67e22';
+  setTimeout(() => { tip.style.display = 'none'; tip.style.color = '#27ae60'; }, 5000);
+}
+function addLesson() {
+  BUILTIN_LESSONS.push({ name: `第${BUILTIN_LESSONS.length + 1}课`, words: [] });
+  currentLessonIdx = BUILTIN_LESSONS.length - 1;
+  saveState({ lessonIdx: currentLessonIdx });
+  buildLessonSelect(); renderEditorTabs(); loadEditorContent(); initDeck();
+}
+function deleteCurrentLesson() {
+  if (BUILTIN_LESSONS.length <= 1) { alert('至少保留一课'); return; }
+  if (!confirm(`确定删除「${currentLesson().name}」吗？`)) return;
+  BUILTIN_LESSONS.splice(currentLessonIdx, 1);
+  currentLessonIdx = Math.max(0, currentLessonIdx - 1);
+  saveState({ lessonIdx: currentLessonIdx });
+  buildLessonSelect(); renderEditorTabs(); loadEditorContent(); initDeck();
+}
+
+// ==================== 导入导出 ====================
+function exportData() {
+  const obj = { lessons: BUILTIN_LESSONS, currentLesson: currentLessonIdx, exportDate: new Date().toISOString().slice(0,10) };
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `汉语词卡词库_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importData(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const tip = document.getElementById('importTip');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.lessons || !Array.isArray(data.lessons)) {
+        tip.textContent = '⚠️ 文件格式不正确'; tip.style.display = 'block'; return;
+      }
+      let wc = 0;
+      BUILTIN_LESSONS.length = 0;
+      data.lessons.forEach(l => { BUILTIN_LESSONS.push(l); wc += l.words.length; });
+      currentLessonIdx = Math.min(data.currentLesson || 0, BUILTIN_LESSONS.length - 1);
+      saveState({ lessonIdx: currentLessonIdx });
+      buildLessonSelect(); renderEditorTabs(); loadEditorContent(); initDeck();
+      tip.textContent = `✓ 导入成功！共 ${data.lessons.length} 课 ${wc} 个词`;
+      tip.style.color = '#27ae60'; tip.style.display = 'block';
+      setTimeout(() => { tip.style.display = 'none'; tip.style.color = '#e67e22'; }, 5000);
+    } catch { tip.textContent = '⚠️ 读取失败'; tip.style.display = 'block'; }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ==================== 键盘快捷键（仅闪卡模式生效） ====================
+document.addEventListener('keydown', e => {
+  if (mainMode !== 'flash') return;
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextCard(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevCard(); }
+  if (e.key === 'Enter' || e.key === 'f') flipCard();
+  if (e.key === '1') evalCard('know');
+  if (e.key === '2') evalCard('fuzzy');
+  if (e.key === '3') evalCard('dontknow');
+});
+
+// ==================== 教师模式检测 ====================
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('edit') || window.location.hash === '#edit') {
+  document.getElementById('editorToggle').style.display = 'block';
+}
+
+// ==================== 初始化 ====================
+buildLessonSelect();
+setUseMode('self');
+initDeck();
+</script>
+</body>
+</html>
