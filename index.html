@@ -1152,7 +1152,7 @@
     <p style="font-size:14px;color:var(--text-mid);margin-bottom:14px" id="submitModalInfo"></p>
     <input type="text" id="submitNameInput" placeholder="请输入你的姓名" maxlength="20">
     <div class="modal-btns">
-      <button class="btn-confirm" onclick="confirmSubmitScore()">复制成绩</button>
+      <button class="btn-confirm" onclick="confirmSubmitScore()">📤 提交成绩</button>
       <button class="btn-cancel" onclick="closeSubmitModal()">取消</button>
     </div>
     <div class="submit-status" id="submitStatus"></div>
@@ -1940,6 +1940,8 @@ function closeSubmitModal() {
   document.getElementById('submitOverlay').classList.remove('open');
 }
 
+const SUBMIT_API = 'https://script.google.com/macros/s/AKfycbwbbjJMY9fKXImi3JSh3ilI0YRN9nOSQJl3yur56VYlIiWboyH9at_eOn6zGcsW9RrY/exec';
+
 function confirmSubmitScore() {
   const name = document.getElementById('submitNameInput').value.trim();
   if (!name) {
@@ -1959,35 +1961,65 @@ function confirmSubmitScore() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('zh-CN');
   const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  const timeFull = `${dateStr} ${timeStr}`;
 
-  // 生成格式化文本
-  const text = `📚 汉语词卡练习成绩\n` +
-    `━━━━━━━━━━━━━━\n` +
-    `👤 姓名：${name}\n` +
-    `📖 课程：${s.lessonName}\n` +
-    `📝 练习：${typeLabel}\n` +
-    `🔄 轮次：${s.rounds} 轮\n` +
-    `📊 题数：${totalAll} 题\n` +
-    `✅ 正确：${s.totalOk}\n` +
-    `❌ 错误：${s.totalErr}\n` +
-    `📈 正确率：${accAll}%\n` +
-    `⏱️ 用时：${formatTime(s.totalTime)}\n` +
-    `${wrongText !== '无' ? '❗ 错词：' + wrongText + '\n' : ''}` +
-    `━━━━━━━━━━━━━━\n` +
-    `📅 ${dateStr} ${timeStr}`;
+  const statusEl = document.getElementById('submitStatus');
+  statusEl.textContent = '⏳ 正在提交...';
+  statusEl.className = 'submit-status';
 
-  // 复制到剪贴板
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      const statusEl = document.getElementById('submitStatus');
-      statusEl.innerHTML = '✅ 成绩已复制到剪贴板！<br><span style="font-size:12px;color:var(--text-light)">请粘贴发送给老师</span>';
-      statusEl.className = 'submit-status ok';
-    }).catch(() => {
+  // 构建提交数据
+  const payload = {
+    time: timeFull,
+    name: name,
+    lesson: s.lessonName,
+    type: typeLabel,
+    rounds: s.rounds,
+    correct: s.totalOk,
+    wrong: s.totalErr,
+    duration: s.totalTime,
+    mistakes: wrongText
+  };
+
+  // 发送到 Google Sheets
+  fetch(SUBMIT_API, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    statusEl.innerHTML = '✅ 成绩已提交成功！<br><span style="font-size:12px;color:var(--text-light)">老师可以在表格中查看</span>';
+    statusEl.className = 'submit-status ok';
+  })
+  .catch(() => {
+    // 网络失败时降级为剪贴板
+    const text = `📚 汉语词卡练习成绩\n` +
+      `━━━━━━━━━━━━━━\n` +
+      `👤 姓名：${name}\n` +
+      `📖 课程：${s.lessonName}\n` +
+      `📝 练习：${typeLabel}\n` +
+      `🔄 轮次：${s.rounds} 轮\n` +
+      `📊 题数：${totalAll} 题\n` +
+      `✅ 正确：${s.totalOk}\n` +
+      `❌ 错误：${s.totalErr}\n` +
+      `📈 正确率：${accAll}%\n` +
+      `⏱️ 用时：${formatTime(s.totalTime)}\n` +
+      `${wrongText !== '无' ? '❗ 错词：' + wrongText + '\n' : ''}` +
+      `━━━━━━━━━━━━━━\n` +
+      `📅 ${timeFull}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        statusEl.innerHTML = '⚠️ 网络提交失败，成绩已复制到剪贴板<br><span style="font-size:12px;color:var(--text-light)">请粘贴发送给老师</span>';
+        statusEl.className = 'submit-status err';
+      }).catch(() => {
+        fallbackCopy(text);
+        statusEl.className = 'submit-status err';
+      });
+    } else {
       fallbackCopy(text);
-    });
-  } else {
-    fallbackCopy(text);
-  }
+      statusEl.className = 'submit-status err';
+    }
+  });
 }
 
 function fallbackCopy(text) {
