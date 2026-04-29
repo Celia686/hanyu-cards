@@ -664,6 +664,98 @@
     transition: all .2s;
   }
   .btn-dict-retry:hover { background: var(--primary); color: #fff; }
+
+  /* ===== 提交成绩相关 ===== */
+  .btn-submit-score {
+    margin-top: 14px;
+    padding: 10px 28px;
+    border: none;
+    border-radius: 10px;
+    background: #27ae60;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-submit-score:hover { background: #219a52; }
+  .btn-continue-round {
+    margin-top: 8px;
+    padding: 10px 28px;
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--accent);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-continue-round:hover { background: var(--accent); color: #fff; }
+  .session-summary {
+    background: #f0f7ff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 14px 0 6px;
+    font-size: 14px;
+    color: var(--text-mid);
+    line-height: 1.8;
+  }
+  .session-summary strong { color: var(--text-dark); }
+
+  /* 提交弹窗遮罩 */
+  .submit-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+  .submit-overlay.open { display: flex; }
+  .submit-modal {
+    background: #fff;
+    border-radius: 18px;
+    padding: 32px 28px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    text-align: center;
+  }
+  .submit-modal h3 { font-size: 20px; color: var(--primary); margin-bottom: 16px; }
+  .submit-modal input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    margin-bottom: 16px;
+  }
+  .submit-modal input:focus { border-color: var(--accent); }
+  .submit-modal .modal-btns { display: flex; gap: 10px; justify-content: center; }
+  .submit-modal .modal-btns button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .submit-modal .btn-confirm { background: #27ae60; color: #fff; }
+  .submit-modal .btn-confirm:hover { background: #219a52; }
+  .submit-modal .btn-cancel { background: #eee; color: var(--text-mid); }
+  .submit-modal .btn-cancel:hover { background: #ddd; }
+  .submit-modal .submit-status {
+    margin-top: 12px;
+    font-size: 14px;
+    min-height: 20px;
+  }
+  .submit-modal .submit-status.ok { color: #27ae60; }
+  .submit-modal .submit-status.err { color: #c0392b; }
   .btn-match-restart {
     border: none;
     border-radius: 50px;
@@ -973,22 +1065,24 @@
     <div class="result-grid">
       <div class="ritem">
         <div class="rnum time-color" id="resDuration">—</div>
-        <div class="rlabel">用时</div>
+        <div class="rlabel">本轮用时</div>
       </div>
       <div class="ritem">
         <div class="rnum ok-color" id="resOk">—</div>
-        <div class="rlabel">配对正确</div>
+        <div class="rlabel">正确</div>
       </div>
       <div class="ritem">
         <div class="rnum err-color" id="resErr">—</div>
-        <div class="rlabel">配对错误</div>
+        <div class="rlabel">错误</div>
       </div>
       <div class="ritem">
         <div class="rnum" id="resAcc" style="color:var(--primary)">—</div>
         <div class="rlabel">正确率</div>
       </div>
     </div>
-    <button class="btn-match-restart" onclick="startMatch()">再来一轮</button>
+    <div class="session-summary" id="matchSessionSummary"></div>
+    <button class="btn-continue-round" onclick="continueMatchRound()">继续下一轮</button>
+    <button class="btn-submit-score" onclick="openSubmitModal('match')">📤 提交成绩给老师</button>
   </div>
 </div>
 
@@ -1044,8 +1138,24 @@
       </div>
     </div>
     <div class="dict-wrong-list" id="dictWrongList"></div>
-    <button class="btn-dict-restart" onclick="startDict()">再来一轮</button>
-    <button class="btn-dict-retry" id="dictRetryBtn" onclick="retryWrongWords()" style="display:none">错词重练</button>
+    <div class="session-summary" id="dictSessionSummary"></div>
+    <button class="btn-continue-round" onclick="continueDictRound()">继续下一轮</button>
+    <button class="btn-submit-score" onclick="openSubmitModal('dict')">📤 提交成绩给老师</button>
+    <button class="btn-dict-retry" id="dictRetryBtn" onclick="retryWrongWords()" style="display:none;margin-top:8px">错词重练</button>
+  </div>
+</div>
+
+<!-- ===== 提交成绩弹窗 ===== -->
+<div class="submit-overlay" id="submitOverlay">
+  <div class="submit-modal">
+    <h3>📤 提交成绩</h3>
+    <p style="font-size:14px;color:var(--text-mid);margin-bottom:14px" id="submitModalInfo"></p>
+    <input type="text" id="submitNameInput" placeholder="请输入你的姓名" maxlength="20">
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="confirmSubmitScore()">确认提交</button>
+      <button class="btn-cancel" onclick="closeSubmitModal()">取消</button>
+    </div>
+    <div class="submit-status" id="submitStatus"></div>
   </div>
 </div>
 
@@ -1194,8 +1304,8 @@ function switchMainMode(m) {
   document.getElementById('matchArea').style.display = m === 'match' ? 'block' : 'none';
   document.getElementById('dictArea').style.display = m === 'dict' ? 'block' : 'none';
   document.getElementById('flashControls').style.display = m === 'flash' ? 'flex' : 'none';
-  if (m === 'match') startMatch();
-  if (m === 'dict') startDict();
+  if (m === 'match') { resetSession('match'); startMatch(); }
+  if (m === 'dict') { resetSession('dict'); startDict(); }
 }
 
 // ==================== 状态（闪卡） ====================
@@ -1259,8 +1369,12 @@ function buildLessonSelect() {
 document.getElementById('lessonSelect').addEventListener('change', function() {
   currentLessonIdx = parseInt(this.value);
   saveState({ lessonIdx: currentLessonIdx });
+  // 课程切换 → 重置累积统计
+  resetSession('match');
+  resetSession('dict');
   if (mainMode === 'flash') initDeck();
-  else startMatch();
+  else if (mainMode === 'match') startMatch();
+  else if (mainMode === 'dict') startDict();
 });
 
 // ==================== 闪卡初始化 ====================
@@ -1529,6 +1643,13 @@ function checkMatchComplete() {
     document.getElementById('resOk').textContent = matchOkCount;
     document.getElementById('resErr').textContent = matchErrCount;
     document.getElementById('resAcc').textContent = acc + '%';
+    // 累积本轮成绩
+    const roundWrong = matchWords.filter((w, i) => {
+      // 找出本轮中未配对的词（简化处理：用总错误数间接记录）
+      return false;
+    });
+    accumulateRound('match', matchOkCount, matchErrCount, elapsed, []);
+    renderSessionSummary('match');
     document.getElementById('matchDone').style.display = 'block';
   }
 }
@@ -1710,12 +1831,17 @@ function finishDict() {
       item.innerHTML = `<span class="whz">${w.hz}</span><span class="wpy">${w.py}</span><span class="wth">${w.th}</span>`;
       wrongListEl.appendChild(item);
     });
-    document.getElementById('dictRetryBtn').style.display = 'inline-block';
+    document.getElementById('dictRetryBtn').style.display = dictRetryMode ? 'none' : 'inline-block';
   } else {
     wrongListEl.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:12px">全部正确！太棒了 🌟</div>';
     document.getElementById('dictRetryBtn').style.display = 'none';
   }
 
+  // 累积本轮成绩
+  if (!dictRetryMode) {
+    accumulateRound('dict', dictOkCount, dictErrCount, elapsed, [...dictWrongWords]);
+  }
+  renderSessionSummary('dict');
   document.getElementById('dictDone').style.display = 'block';
 }
 
@@ -1739,6 +1865,146 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ==================== 累积统计 & 提交成绩 ====================
+// 会话累积数据（同课+同类型+当天）
+let sessionData = {
+  match: { rounds: 0, totalOk: 0, totalErr: 0, totalTime: 0, allWrongWords: [], lessonName: '' },
+  dict:  { rounds: 0, totalOk: 0, totalErr: 0, totalTime: 0, allWrongWords: [], lessonName: '' }
+};
+let pendingSubmitType = ''; // 'match' or 'dict'
+
+function resetSession(type) {
+  const lessonName = currentLesson().name;
+  sessionData[type] = { rounds: 0, totalOk: 0, totalErr: 0, totalTime: 0, allWrongWords: [], lessonName: lessonName };
+}
+
+function accumulateRound(type, ok, err, elapsed, wrongWords) {
+  const s = sessionData[type];
+  s.lessonName = currentLesson().name;
+  s.rounds++;
+  s.totalOk += ok;
+  s.totalErr += err;
+  s.totalTime += elapsed;
+  // 合并错词（去重，按 hz 去重）
+  wrongWords.forEach(w => {
+    if (!s.allWrongWords.find(x => x.hz === w.hz)) {
+      s.allWrongWords.push(w);
+    }
+  });
+}
+
+function renderSessionSummary(type) {
+  const s = sessionData[type];
+  const totalAll = s.totalOk + s.totalErr;
+  const accAll = totalAll > 0 ? Math.round(s.totalOk / totalAll * 100) : 0;
+  const totalWords = currentLesson().words.length;
+  const covered = Math.min(totalAll, totalWords);
+  const elId = type === 'match' ? 'matchSessionSummary' : 'dictSessionSummary';
+  const el = document.getElementById(elId);
+  if (s.rounds <= 1) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `📊 <strong>本次课程累计</strong>（第 ${s.rounds} 轮）：共 ${totalAll} 题，正确 ${s.totalOk}，错误 ${s.totalErr}，正确率 <strong>${accAll}%</strong>，总用时 ${formatTime(s.totalTime)}`;
+}
+
+function continueMatchRound() {
+  document.getElementById('matchDone').style.display = 'none';
+  startMatch();
+}
+
+function continueDictRound() {
+  document.getElementById('dictDone').style.display = 'none';
+  document.getElementById('dictCard').style.display = 'block';
+  startDict();
+}
+
+// --- 提交成绩弹窗 ---
+function openSubmitModal(type) {
+  pendingSubmitType = type;
+  const s = sessionData[type];
+  const totalAll = s.totalOk + s.totalErr;
+  const accAll = totalAll > 0 ? Math.round(s.totalOk / totalAll * 100) : 0;
+  const typeLabel = type === 'match' ? '配对练习' : '听写练习';
+  document.getElementById('submitModalInfo').textContent =
+    `${s.lessonName} · ${typeLabel} · ${s.rounds}轮 · 共${totalAll}题 · 正确率${accAll}%`;
+  document.getElementById('submitNameInput').value = localStorage.getItem('hz_student_name') || '';
+  document.getElementById('submitStatus').textContent = '';
+  document.getElementById('submitStatus').className = 'submit-status';
+  document.getElementById('submitOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('submitNameInput').focus(), 200);
+}
+
+function closeSubmitModal() {
+  document.getElementById('submitOverlay').classList.remove('open');
+}
+
+function confirmSubmitScore() {
+  const name = document.getElementById('submitNameInput').value.trim();
+  if (!name) {
+    document.getElementById('submitNameInput').style.borderColor = '#c0392b';
+    return;
+  }
+  document.getElementById('submitNameInput').style.borderColor = '';
+  localStorage.setItem('hz_student_name', name);
+
+  const statusEl = document.getElementById('submitStatus');
+  statusEl.textContent = '提交中...';
+  statusEl.className = 'submit-status';
+
+  const type = pendingSubmitType;
+  const s = sessionData[type];
+  const totalAll = s.totalOk + s.totalErr;
+  const accAll = totalAll > 0 ? Math.round(s.totalOk / totalAll * 100) : 0;
+  const typeLabel = type === 'match' ? '配对练习' : '听写练习';
+  const wrongText = s.allWrongWords.map(w => w.hz).join('、') || '无';
+
+  const payload = {
+    name: name,
+    lesson: s.lessonName,
+    type: typeLabel,
+    rounds: s.rounds,
+    total: totalAll,
+    ok: s.totalOk,
+    err: s.totalErr,
+    accuracy: accAll + '%',
+    time: formatTime(s.totalTime),
+    wrongWords: wrongText,
+    submittedAt: new Date().toLocaleString('zh-CN')
+  };
+
+  // 发送到腾讯文档收集表
+  submitToTencentDoc(payload).then(ok => {
+    if (ok) {
+      statusEl.textContent = '✅ 成绩已提交！';
+      statusEl.className = 'submit-status ok';
+      setTimeout(() => closeSubmitModal(), 1200);
+    } else {
+      statusEl.textContent = '❌ 提交失败，请稍后重试';
+      statusEl.className = 'submit-status err';
+    }
+  });
+}
+
+async function submitToTencentDoc(data) {
+  // TODO: 替换为实际的腾讯文档收集表提交 URL
+  // 当前先模拟成功
+  try {
+    console.log('[成绩提交]', data);
+    // 实际提交代码示例（取消注释并替换 URL）：
+    // const resp = await fetch('YOUR_TENCENT_DOC_WEBHOOK_URL', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(data)
+    // });
+    // return resp.ok;
+    return true; // 模拟成功
+  } catch (e) {
+    console.error('[成绩提交失败]', e);
+    return false;
+  }
+}
 
 // ==================== 词单编辑器 ====================
 let editorOpen = false;
