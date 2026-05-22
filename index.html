@@ -198,6 +198,19 @@
     text-align: center;
     font-weight: 500;
   }
+  .card-example {
+    font-size: clamp(14px, 2.8vw, 20px);
+    color: #555;
+    margin-top: 12px;
+    text-align: center;
+    line-height: 1.5;
+    padding: 0 8px;
+  }
+  .card-example-label {
+    font-size: clamp(11px, 2.2vw, 15px);
+    color: #999;
+    margin-right: 4px;
+  }
   .card-tap-hint {
     font-size: 13px;
     color: #bbb;
@@ -1332,6 +1345,38 @@ const BUILTIN_LESSONS = [
       { hz: '十二', py: "shí'èr", th: 'สิบสอง' },
       { hz: '吧', py: 'ba', th: 'เถอะ / นะ (คำสร้อยชักชวนหรือเสนอแนะ)' },
     ]
+  },
+  {
+    name: '第9课',
+    words: [
+      { hz: '怎么', py: 'zěnme', th: 'อย่างไร / ยังไง', ex: '怎么去 / 怎么玩儿' },
+      { hz: '号', py: 'hào', th: 'วันที่ / หมายเลข', ex: '几号 / 房间号' },
+      { hz: '坐', py: 'zuò', th: 'นั่ง (โดยสาร)', ex: '坐车 / 坐飞机 / 坐地铁' },
+      { hz: '骑', py: 'qí', th: 'ขี่', ex: '骑车 / 骑马' },
+      { hz: '线', py: 'xiàn', th: 'สาย (รถไฟฟ้า)', ex: '地铁四号线' },
+      { hz: '给', py: 'gěi', th: 'ให้', ex: '给谁 / 给朋友' },
+      { hz: '楼', py: 'lóu', th: 'ตึก / อาคาร / ชั้น', ex: '一号楼 / 宿舍楼' },
+      { hz: '电话', py: 'diànhuà', th: 'โทรศัพท์', ex: '电话号码 / 打电话' },
+      { hz: '东门', py: 'dōngmén', th: 'ประตูทิศตะวันออก', ex: '学校东门' },
+      { hz: '微信', py: 'wēixìn', th: 'วีแชท (WeChat)', ex: '微信号 / 加微信' },
+      { hz: '旁边', py: 'pángbiān', th: 'ข้างๆ / ด้านข้าง', ex: '旁边的房间 / 学校旁边' },
+      { hz: '和', py: 'hé', th: 'และ / กับ', ex: '我和你 / 今天和明天' },
+      { hz: '加', py: 'jiā', th: 'เพิ่ม / แอด', ex: '加一下儿我的微信' },
+      { hz: '号码', py: 'hàomǎ', th: 'หมายเลข / เบอร์', ex: '手机号码' },
+      { hz: '快递', py: 'kuàidì', th: 'พัสดุ / ส่งพัสดุด่วน', ex: '有你的快递' },
+      { hz: '知道', py: 'zhīdào', th: 'รู้ / ทราบ', ex: '不知道电话号码' },
+      { hz: '办公室', py: 'bàngōngshì', th: 'ห้องทำงาน / ออฟฟิศ', ex: '去办公室 / 在办公室' },
+      { hz: '星期六', py: 'xīngqīliù', th: 'วันเสาร์', ex: '今天星期六' },
+      { hz: '地铁', py: 'dìtiě', th: 'รถไฟใต้ดิน', ex: '坐地铁' },
+      { hz: '公共汽车', py: 'gōnggòng qìchē', th: 'รถเมล์ / รถประจำทาง', ex: '坐公共汽车' },
+      { hz: '飞机', py: 'fēijī', th: 'เครื่องบิน', ex: '坐飞机' },
+      { hz: '火车', py: 'huǒchē', th: 'รถไฟ', ex: '坐火车' },
+      { hz: '自行车', py: 'zìxíngchē', th: 'รถจักรยาน', ex: '骑自行车' },
+      { hz: '出租车', py: 'chūzūchē', th: 'รถแท็กซี่', ex: '坐出租车' },
+      { hz: '男', py: 'nán', th: 'ผู้ชาย', ex: '他是男的' },
+      { hz: '女', py: 'nǚ', th: 'ผู้หญิง', ex: '她是女的' },
+      { hz: '动物园', py: 'dòngwùyuán', th: 'สวนสัตว์', ex: '去动物园玩儿' },
+    ]
   }
 ];
 
@@ -1405,12 +1450,16 @@ function parseWords(text) {
   return text.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'))
     .map(l => {
       const p = l.split('|').map(s => s.trim());
-      if (p.length >= 3) return { hz: p[0], py: p[1], th: p[2] };
+      if (p.length >= 4) return { hz: p[0], py: p[1], th: p[2], ex: p[3] };
+      if (p.length === 3) return { hz: p[0], py: p[1], th: p[2] };
       if (p.length === 2) return { hz: p[0], py: p[1], th: '' };
       return null;
     }).filter(Boolean);
 }
-function wordsToText(words) { return words.map(w => `${w.hz} | ${w.py} | ${w.th}`).join('\n'); }
+function wordsToText(words) { return words.map(w => {
+  if (w.ex) return `${w.hz} | ${w.py} | ${w.th} | ${w.ex}`;
+  return `${w.hz} | ${w.py} | ${w.th}`;
+}).join('\n'); }
 
 // ==================== 课程 ====================
 function currentLesson() { return BUILTIN_LESSONS[currentLessonIdx] || { name: '', words: [] }; }
@@ -1470,18 +1519,21 @@ function renderCard() {
   if (deckPos >= deck.length) { showDone(); return; }
   const word = deck[deckPos];
   const pyColored = colorPinyin(word.py);
+  const exHtml = word.ex ? `<div class="card-example"><span class="card-example-label">搭配：</span>${word.ex}</div>` : '';
   if (cardMode === 'hz') {
     front.innerHTML = `<div class="card-hanzi">${word.hz}</div><div class="card-tap-hint">点击翻转</div>`;
     back.innerHTML = `
       <div class="card-hanzi" style="font-size:clamp(60px,12vw,100px)">${word.hz}</div>
       <div class="card-pinyin" style="font-size:clamp(44px,10vw,78px)">${pyColored}</div>
-      <div class="card-thai" style="font-size:clamp(20px,4.5vw,34px)">${word.th}</div>`;
+      <div class="card-thai" style="font-size:clamp(20px,4.5vw,34px)">${word.th}</div>
+      ${exHtml}`;
   } else {
     front.innerHTML = `<div class="card-pinyin" style="font-size:clamp(42px,10vw,80px)">${pyColored}</div><div class="card-tap-hint">点击翻转</div>`;
     back.innerHTML = `
       <div class="card-hanzi">${word.hz}</div>
       <div class="card-pinyin">${pyColored}</div>
-      <div class="card-thai">${word.th}</div>`;
+      <div class="card-thai">${word.th}</div>
+      ${exHtml}`;
   }
 }
 
